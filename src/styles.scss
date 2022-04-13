@@ -4,9 +4,19 @@
 
 .App {
   // Styles Here;
-  backgroundColor: 'gray'
+ 
 }
 
 .toolbar-title {
   margin-bottom: -10px !important;
+}
+
+.container {
+ width: 90%;
+ margin: auto
+}
+@media only screen and (max-width: 720px) {
+    .container {
+      width: 90%;
+    }
 }
