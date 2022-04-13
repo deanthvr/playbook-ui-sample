@@ -1,6 +1,6 @@
 /* @flow*/
 
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import {
   CircleIconButton,
   Title,
@@ -19,29 +19,157 @@ import {
   StatChange,
   SectionSeparator
 } from "playbook-ui";
+import { KpiDashboard } from "./components/KpiDashboard";
 
-const kpis = [
+const kpiRevenue = [
+  {
+    label: "5/1",
+    value: 45000
+  },
+  {
+    label: "6/1",
+    value: 50000
+  },
+  {
+    label: "7/1",
+    value: 60000
+  },
+  {
+    label: "8/1",
+    value: 70000
+  },
+  {
+    label: "9/1",
+    value: 75000
+  },
+  {
+    label: "10/1",
+    value: 80000
+  },
+  {
+    label: "11/1",
+    value: 90000
+  },
+  {
+    label: "12/1",
+    value: 100000
+  }
+];
+const kpiOrders = [
+  {
+    label: "5/1",
+    value: 5000
+  },
+  {
+    label: "6/1",
+    value: 5100
+  },
+  {
+    label: "7/1",
+    value: 5500
+  },
+  {
+    label: "8/1",
+    value: 5000
+  },
+  {
+    label: "9/1",
+    value: 4900
+  },
+  {
+    label: "10/1",
+    value: 4850
+  },
+  {
+    label: "11/1",
+    value: 4900
+  },
+  {
+    label: "12/1",
+    value: 4800
+  }
+];
+
+const kpiOptions = [
   {
     title: "Revenue",
     value: 26,
-    increase: true,
-    active: true
+    change: "increase",
+    data: kpiRevenue
   },
   {
     title: "Orders",
-    value: 26,
-    increase: false,
-    active: false
+    value: 2,
+    change: "decrease",
+    data: kpiOrders
   },
   {
-    title: "Revenue",
-    value: 26,
-    increase: false,
-    active: false
+    title: "Profit",
+    value: null,
+    change: "",
+    data: kpiOrders
+  },
+  {
+    title: "Average Check",
+    value: 5,
+    change: "increase",
+    data: kpiRevenue
+  },
+  {
+    title: "Cancelled",
+    value: 18,
+    change: "decrease",
+    data: kpiRevenue
+  },
+  {
+    title: "Repeat Sales",
+    value: null,
+    change: "",
+    data: kpiRevenue
   }
 ];
 
 export default function App() {
+  //lets initialize some data for the kpi graph
+  const kpiDataInit = [
+    {
+      name: "data",
+      data: kpiRevenue.map((data) => data.value)
+    }
+  ];
+  const [selectedKpiIndex, setSelectedKpiIndex] = useState(0);
+  const [kpiData, setKpiData] = useState(kpiDataInit);
+  const [kpiLabels, setKpiLables] = useState(
+    kpiRevenue.map((data) => data.label)
+  );
+  const [tickets, setTickets] = useState([]);
+  const handleKpiSelect = (index) => {
+    setSelectedKpiIndex(index);
+    let newData = [
+      {
+        name: "data",
+        data: kpiOptions[index].data.map((data) => data.value)
+      }
+    ];
+    setKpiData(newData);
+    setKpiLables(kpiOptions[index].data.map((data) => data.label));
+  };
+
+  //lets fetch from json file the ticket statuses
+  fetch("./tickets.json", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    }
+  })
+    .then((resp) => {
+      return resp.json();
+    })
+    .then((data) => {
+      console.log("tickets", data);
+      setTickets(data.ticketEscalations);
+    });
+
   return (
     <div className="App">
       <Background
@@ -117,37 +245,41 @@ export default function App() {
           <Title text="Commerce Dashboard" />
         </FlexItem>
         <FlexItem grow>
-          <Card padding="none">
-            <Card.Body padding="xs">
-              <Flex orientation="row" align="center" spacing="between">
-                <FlexItem>
-                  <Title text="Key Performance Indicators" tag="h4" size={4} />
-                </FlexItem>
-                <FlexItem>
-                  <CircleIconButton icon="ellipsis-h" variant="secondary" />
-                </FlexItem>
-              </Flex>
-            </Card.Body>
-            <SectionSeparator variant="card" />
-            <Card.Body>
-              <Flex orientation="row">
-                <FlexItem flex={3}>
-                  <Nav orientation="vertical">
-                    <NavItem active link="#">
-                      <Flex orientation="row">
-                        <Title text="Revenue" />
-                        <StatChange change="increase" value="26%" />
-                      </Flex>
-                    </NavItem>
-                    <NavItem link="#" text="Orders"></NavItem>
-                    <StatChange change="increase" value={26} />
-                  </Nav>
-                </FlexItem>
-                <FlexItem flex={8}></FlexItem>
-              </Flex>
-            </Card.Body>
-          </Card>
+          <KpiDashboard
+            options={kpiOptions}
+            selected={selectedKpiIndex}
+            data={kpiData}
+            labels={kpiLabels}
+            handleKpiSelect={handleKpiSelect}
+          ></KpiDashboard>
         </FlexItem>
+      </Flex>
+      <Flex
+        className="container"
+        orientation="column"
+        padding="none"
+        align="center"
+      >
+        <FlexItem>
+          <Caption text="This Weeks Ticked Ecalations" />
+        </FlexItem>
+        <Flex orientation="row">
+          {tickets
+            ? tickets.map((type) => {
+                return (
+                  <FlexItem>
+                    <Card>
+                      <Card.Title
+                        highligt={{ position: "side", color: "windows" }}
+                      >
+                        <Title text={type.status} />
+                      </Card.Title>
+                    </Card>
+                  </FlexItem>
+                );
+              })
+            : ""}
+        </Flex>
       </Flex>
     </div>
   );
