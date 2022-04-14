@@ -1,6 +1,6 @@
 /* @flow*/
 
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState, useEffect } from "react";
 import {
   CircleIconButton,
   Title,
@@ -20,6 +20,8 @@ import {
   SectionSeparator
 } from "playbook-ui";
 import { KpiDashboard } from "./components/KpiDashboard";
+import {TicketStatus} from "./components/TicketStatus";
+import ticketsApi from "./tickets.json";
 
 const kpiRevenue = [
   {
@@ -142,7 +144,7 @@ export default function App() {
   const [kpiLabels, setKpiLables] = useState(
     kpiRevenue.map((data) => data.label)
   );
-  const [tickets, setTickets] = useState([]);
+  //const [tickets, setTickets] = useState();
   const handleKpiSelect = (index) => {
     setSelectedKpiIndex(index);
     let newData = [
@@ -156,19 +158,27 @@ export default function App() {
   };
 
   //lets fetch from json file the ticket statuses
-  fetch("./tickets.json", {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    }
-  })
-    .then((resp) => {
-      return resp.json();
+  const getData = () => {
+    fetch("/data/tickets.json", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      }
     })
-    .then((data) => {
-      console.log("tickets", data);
-      setTickets(data.ticketEscalations);
-    });
+      .then(function (response) {
+        console.log(response);
+        return response.json();
+      })
+      .then(function (myJson) {
+        console.log(myJson);
+        setTickets(myJson);
+      });
+  };
+
+  useEffect(() => {
+    //console.log(ticketsApi)
+    //setTickets(ticketsApi)
+  }, []);
 
   return (
     <div className="App">
@@ -264,21 +274,7 @@ export default function App() {
           <Caption text="This Weeks Ticked Ecalations" />
         </FlexItem>
         <Flex orientation="row">
-          {tickets
-            ? tickets.map((type) => {
-                return (
-                  <FlexItem>
-                    <Card>
-                      <Card.Title
-                        highligt={{ position: "side", color: "windows" }}
-                      >
-                        <Title text={type.status} />
-                      </Card.Title>
-                    </Card>
-                  </FlexItem>
-                );
-              })
-            : ""}
+          <TicketStatus data={ticketsApi}/>
         </Flex>
       </Flex>
     </div>
